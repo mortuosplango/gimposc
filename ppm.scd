@@ -1,18 +1,12 @@
 (
-var f, g;
-f = File("test.ppm","w");
-
-f.write("P3\n" ++ "\n");
-f.close;
-)
-(
 ~writePPM = {|filename="test", array|
 	var content,file;
+	// P3 is the easiest format
 	content = ("P3\n" ++ array.cols ++ "\n"
 		++ array.rows ++ "\n" ++ "255" ++ "\n");
 	array.rowsDo({|row|
 		content = (content 
-			++ row.flat.asCompileString.replace(",").replace("[").replace("]")
+			++ row.flat.asCompileString.removeEvery(",").drop(-1).drop(1)
 			++ "\n");
 	});
 	file = File(filename ++ ".ppm","w");
@@ -20,7 +14,4 @@ f.close;
 	file.close;
 };
 )
-~writePPM.value("test2", ~pic);
-"test"
-
-~pic.unbubble
+{~writePPM.value("test2",~pic)}.bench
