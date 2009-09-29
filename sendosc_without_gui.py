@@ -13,17 +13,19 @@ sendosc_help = _("Send image as OSC-Message.")
 sendosc_description = _("SendOSC (without GUI")+" "+sendosc_help
 
 def python_fu_sendosc_headless( inImage, inDrawable):
+    addr = "127.0.0.1"
+    port = 57120
+    bFlatten = False
     # just call sendosc with the saved parameters
+    # if there are any
     if shelf.has_key('oscnetaddr'):
         addr = shelf['oscnetaddr'][0]
-    else:
-        addr = "127.0.0.1"
     if shelf.has_key('oscport'):
         port = shelf['oscport'][0]
-    else:
-        port = 57120
+    if shelf.has_key('oscbflatten'):
+        bFlatten = shelf['oscbflatten'][0]
     
-    pdb.python_fu_sendosc(inImage,inDrawable,addr,port)
+    pdb.python_fu_sendosc(inImage,inDrawable,bFlatten,addr,port)
 
     gimp.delete(inImage)
 

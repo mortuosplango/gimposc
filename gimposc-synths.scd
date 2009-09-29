@@ -6,6 +6,7 @@ a = Synth(\transping, [\shape, 0, \freq, 220, \sustain, 5]);
 ~aping = Synth(\pping);
 ~aping.set(\gate,0);
 
+b.play
 
 a.set(\gate, 1);
 a.set(\gate, 0.4);
@@ -16,27 +17,26 @@ Synth(\pgrain, [\sndbuf, b]);
 (
 b = Buffer.readChannel(s, Document.current.path.dirname ++ "/sounds/strangetown.aiff", channels: [0]);
 
-(
 SynthDef(\pgrain, { |gate=1, amp=1, position=0.5 sustain=0.1,dur=0.1, rate=1, pan=0, density=1, sndbuf='b'|
-	var env, freqdev;
-	// use mouse x to control panning
+	var env;
 	env = EnvGen.ar(Env.sine(sustain,amp), doneAction:2);
 	OffsetOut.ar(0,
 		GrainBuf.ar(2, 
-			Dust.kr(10 * density), 
+			Dust.ar(density), 
 			dur, 
 			sndbuf, 
-			LFNoise1.kr.range(0.5, 1.5) * rate,
+			rate * Rand(0.5,1.5),
 			//MouseX.kr(0,1),
 			//LFNoise2.kr(0.1).range(0, 1), 
 			position,
 			2, 
-			pan) 
+			pan,
+			-1) 
 		* env)
 }).send(s);
 )
 
-SynthDef(\pgrain, { |gate=1, amp=1, dur=0.1, rate=1, pan=0, density=1, sndbuf='b', envbuf='z'|
+SynthDef(\ggrain, { |gate=1, amp=1, dur=0.1, rate=1, pan=0, density=1, sndbuf='b', envbuf='z'|
 	var env, freqdev;
 	// use mouse x to control panning
 	env = EnvGen.ar(
@@ -44,7 +44,7 @@ SynthDef(\pgrain, { |gate=1, amp=1, dur=0.1, rate=1, pan=0, density=1, sndbuf='b
 		gate,
 		levelScale: amp,
 		doneAction: 2);
-	OffsetOut.ar(0,
+	Out.ar(0,
 		GrainBuf.ar(2, 
 			Dust.kr(10 * density.lag), 
 			dur.lag, 
@@ -81,4 +81,35 @@ SynthDef(\transping, { |freq=440, sustain=1, gate=0, amp=0.1, shape=1, pan=0|
 	Out.ar(0, Pan2.ar(env * signal,pan));
 }).send(s);
 
+
+(
+~synthList = [\ping, \sine, \pong];
+
+// pong
+SynthDef(~synthList[2], { |out, freq=440, pan, amp=0.1, sustain=0.25, gate = 1|
+	var snd = SinOsc.ar(freq);
+	snd = snd * EnvGen.ar(Env.adsr, gate, doneAction:2);
+	snd = Pan2.ar(snd, pan);
+	OffsetOut.ar(out, snd*amp);
+}).store;
+
+
+// ping
+SynthDef(~synthList[0], { |out, freq=440, pan, amp=0.1, sustain=0.25|
+	var snd = SinOsc.ar(freq);
+	snd = snd * EnvGen.ar(Env.perc(0.01, sustain), doneAction:2);
+	snd = Pan2.ar(snd, pan);
+	OffsetOut.ar(out, snd*amp);
+}).store;
+
+// sine
+SynthDef(~synthList[1], { |out, freq=440, pan, amp=0.1, sustain=0.25|
+	var snd = SinOsc.ar(freq);
+	snd = snd * EnvGen.ar(Env.sine(sustain), doneAction:2);
+	snd = Pan2.ar(snd, pan);
+	OffsetOut.ar(out, snd*amp);
+}).store;
+
+"synths loaded".postln;
+)
 )

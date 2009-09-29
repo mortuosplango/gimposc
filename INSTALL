@@ -1,0 +1,9 @@
+Place the python files in your GIMP plug-in folder, e. g.
+      ~/gimp-2.6/plug-ins
+
+Needs SimpleOSC from
+      http://www.ixi-audio.net/content/body_backyard_python.html
+installed. Just follow the instructions in the Package.
+
+Perhaps you have to place the "osc"-folder where you copied the python
+files to make it work.
