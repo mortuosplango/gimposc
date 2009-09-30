@@ -26,7 +26,7 @@ sendosc_help = _("Send image as OSC-Message.")
 sendosc_description = _("SendOSC")+" "+sendosc_help
 
 def python_fu_sendosc( inImage, inDrawable,
-                       bFlatten=False,
+                       bFlatten=True,
                        netAddr="127.0.0.1",
                        port=57120):
     ## save options for use with the guiless version
@@ -42,33 +42,53 @@ def python_fu_sendosc( inImage, inDrawable,
         flatImage = inImage.duplicate()
         flatImage.flatten()
         pr = flatImage.active_layer.get_pixel_rgn(0,0,width,height,False)
+        bpp = pr.bpp
     else:
         pr = inDrawable.get_pixel_rgn(0,0,width,height,False)
+        if ((pr.bpp == 4) | (pr.bpp == 2)) :
+            bpp = pr.bpp - 1
+        else:
+            bpp = pr.bpp
 
     ## start communication and send the specs of the picture
     osc.init()
     osc.sendMsg("/gimp/spec",
-                [width, height, pr.bpp],
+                [width, height, (bpp + 1)],
                 netAddr, port)
 
-    ## 
     prp = pr[0:width,0:height]
     pic = [ ]
+
     ## the message size is limited to 1024 integers
-    ## therefore split the picture in separate messages
-    for index in range(0,width*height*pr.bpp):
-        if index%1024 == 1023:
-            osc.sendMsg("/gimp", pic, netAddr, port)
-            pic = [ ]
+    ## therefore split the image in separate messages
+    for index in range(1,width*height*bpp):
+        if index%1024 == 0:
+            osc.sendMsg("/gimp", pic[-1024:], netAddr, port)
+            if index%2048 == 0:
+                del pic[:1024]
+        ## strip the alpha channel
+        if index%(bpp+1) == 0:
+            if bpp == 3:
+            ## if it is RGB, calc the brightness and save it:
+            ##         0,299 * R + 0,587 * G + 0,114 * B
+                pic.append(
+                    round(
+                        (pic[-3] * 0.299)
+                        + (pic[-2] * 0.587)
+                        + (pic[-1] * 0.114)))
+            if bpp == pr.bpp:
         ## convert the hex values into integers to not
         ## confuse the client with pseudo-unicodes
-        pic.append(ord(prp[index]))
-    osc.sendMsg("/gimp", pic, netAddr, port)
+                pic.append(ord(prp[index]))
+        else:
+            pic.append(ord(prp[index]))
 
+    ## send the remainder
+    osc.sendMsg("/gimp", pic[-((width*height*bpp)%1024):], netAddr, port)
     ## end communication:
     osc.sendMsg("/gimp", [-1], netAddr, port)
-
-    ## clean up if the image was flattened.
+    ## clean up
+    del pic
     if bFlatten == True:
         inImage.enable_undo()
         gimp.delete(flatImage)
@@ -86,7 +106,7 @@ register(
     [
         (PF_IMAGE, "inImage", "Input image", None),
         (PF_DRAWABLE, "inLayer", "Input drawable", None),
-        (PF_BOOL, "bFlatten", "Flatten image?", False),
+        (PF_BOOL, "bFlatten", "Flatten image?", True),
         (PF_STRING, "netAddr", _("IP-Address"), '127.0.0.1'),
         (PF_INT, "port", _("Port to send to"), 57120),
         ],

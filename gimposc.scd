@@ -1,54 +1,51 @@
-
-NetAddr.langPort
-
-~oscW.remove;
-~oscPic.remove;
-
+////// (1) set global settings
 (
-~oscW = OSCresponderNode(nil, '/gimp/spec', { arg time, resp, msg; 
-	~newpicwidth = msg[1];
-    ~newpicheight = msg[2];                                                 
-	~newpicbpp = msg[3];
-	~newpic = [];
-	~delay = time;
-	(time.asString ++ ": Receiving new Array...").postln;
-}).add;
+//~synthName = \transping;
 
-~oscPic = OSCresponderNode(nil, '/gimp', { arg time, resp, msg;
-	if( msg[1] == -1, 
-		{   
-			~pic = Array2D.fromArray(
-				~newpicheight,
-				~newpicwidth, 
-				~newpic.clump(~newpicbpp));
-			~bpp = ~newpicbpp;
-			~delay = time - ~delay;
-			(time.asString 
-				++ ": Updated Array in " 
-				++ ~delay ++ " seconds.").postln; 			
-		},
-		{ 
-			//msg.postln;
-			//msg.size.postln;
-			msg.removeAt(0);
-			~newpic = ~newpic ++ msg; 
-		}
-		)
-}).add;
-
-["/test", "test"]
-
-~newpicbpp
-
-b = NetAddr.new("127.0.0.1", 57130); // create the NetAddr
-b.sendMsg("/gimp/spec", 640, 480, 3);// send the application the message "hello" with the
-parameter "there"
-
+~scale = nil;
+~octave = 0;
+~root = 0;
+~transp = 0;
+~sustain = 0.5;
+~amp = 0.05;
+~synthspec = ~sSequencer;
+~scale = Scale.choose(7, 12).tuning_(Tuning.choose(12).postln);
+~scaleamps = false;
+~tempoclock = TempoClock.new(queueSize:512);
 )
 
+//////// (2) load everything
+(
+(Document.current.path.dirname ++ "/gimposc-responders.scd").load;
+(Document.current.path.dirname ++ "/gimposc-synths.scd").load;
+(Document.current.path.dirname ++ "/gimposc-players.scd").load;
+(Document.current.path.dirname ++ "/gimposc-gui.scd").load;
+(Document.current.path.dirname ++ "/ppm.scd").load;
+NetAddr.langPort;
+)
 
-~newpic
+/////////// (3) get some image and send it!
+///////////////// (4) start!
 
 
+~synthName = \pping;
+(
+// stop all still running synths
+~synths.do({|item,i| (item.notNil).if(item.set(\gate, 0));});
+~synths = nil!(~pic.rows + 1);
+)
+~synthspec = ~sMatrix
+~synthspec = ~sSequencer
+~synthspec = ~sGrains
 
-~pic.asArray.flat == ~newpic
+~player.start;
+~player.stop;
+~player.reset;
+
+//~synthName = \transping;
+~synthName = \pgrain;
+//~synthName = \welshping;
+//~synthName = \pping;
+~sustain = 0.1;
+
+

@@ -1,20 +1,3 @@
-
-a = Synth(\pping);
-a = Synth(\welshping);
-a = Synth(\transping, [\shape, 0, \freq, 220, \sustain, 5]);
-
-~aping = Synth(\pping);
-~aping.set(\gate,0);
-
-b.play
-
-a.set(\gate, 1);
-a.set(\gate, 0.4);
-
-a.set(\gate, 0);
-
-Synth(\pgrain, [\sndbuf, b]);
-(
 b = Buffer.readChannel(s, Document.current.path.dirname ++ "/sounds/strangetown.aiff", channels: [0]);
 
 SynthDef(\pgrain, { |gate=1, amp=1, position=0.5 sustain=0.1,dur=0.1, rate=1, pan=0, density=1, sndbuf='b'|
@@ -34,8 +17,7 @@ SynthDef(\pgrain, { |gate=1, amp=1, position=0.5 sustain=0.1,dur=0.1, rate=1, pa
 			-1) 
 		* env)
 }).send(s);
-)
-
+/*
 SynthDef(\ggrain, { |gate=1, amp=1, dur=0.1, rate=1, pan=0, density=1, sndbuf='b', envbuf='z'|
 	var env, freqdev;
 	// use mouse x to control panning
@@ -57,7 +39,7 @@ SynthDef(\ggrain, { |gate=1, amp=1, dur=0.1, rate=1, pan=0, density=1, sndbuf='b
 			envbuf) 
 		* env)
 }).send(s);
-
+*/
 SynthDef(\pping, { |freq=440, sustain=0.1, gate=1, amp=0.1|
 	var signal = SinOsc.ar(freq).clip(-0.9,0.9) * 
 	EnvGen.ar(Env.adsr(0.1, 0.4, 0.8, 1, 1, -4), gate, doneAction:2);
@@ -82,7 +64,6 @@ SynthDef(\transping, { |freq=440, sustain=1, gate=0, amp=0.1, shape=1, pan=0|
 }).send(s);
 
 
-(
 ~synthList = [\ping, \sine, \pong];
 
 // pong
@@ -91,7 +72,7 @@ SynthDef(~synthList[2], { |out, freq=440, pan, amp=0.1, sustain=0.25, gate = 1|
 	snd = snd * EnvGen.ar(Env.adsr, gate, doneAction:2);
 	snd = Pan2.ar(snd, pan);
 	OffsetOut.ar(out, snd*amp);
-}).store;
+}).send(s);
 
 
 // ping
@@ -100,7 +81,7 @@ SynthDef(~synthList[0], { |out, freq=440, pan, amp=0.1, sustain=0.25|
 	snd = snd * EnvGen.ar(Env.perc(0.01, sustain), doneAction:2);
 	snd = Pan2.ar(snd, pan);
 	OffsetOut.ar(out, snd*amp);
-}).store;
+}).send(s);
 
 // sine
 SynthDef(~synthList[1], { |out, freq=440, pan, amp=0.1, sustain=0.25|
@@ -108,8 +89,6 @@ SynthDef(~synthList[1], { |out, freq=440, pan, amp=0.1, sustain=0.25|
 	snd = snd * EnvGen.ar(Env.sine(sustain), doneAction:2);
 	snd = Pan2.ar(snd, pan);
 	OffsetOut.ar(out, snd*amp);
-}).store;
+}).send(s);
 
-"synths loaded".postln;
-)
-)
+"synths loaded"

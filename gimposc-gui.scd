@@ -1,5 +1,4 @@
 /////// GUI
-(
 var win,bStart,bReset,bFree;
 win = Window.new("GimpOSC",Rect(1280-600, 800-60, 540, 60)).front;
 ~slider = Slider(win, Rect(10,30, 520, 40));
@@ -24,24 +23,10 @@ bFree = Button.new(win, Rect(230,10,100,15))
 .states_([
 ["Free Synths", Color.black, Color.red],
 ])
-.action_({ ~synths.do({|item,i| (item.notNil).if(item.set(\gate, 0));}) });
-)
+.action_({ 
+	~synths.do({|item,i| (item.notNil).if(item.set(\gate, 0));});
+	~synths = nil!(~pic.rows + 1);
+});
 
 
-~display = Window("Seq", Rect(0,0,1024,20)).front;
-~control = ();
-~control.width = 1024;
-~control.height = 200;
-//~window.view.background_(Color.white);
-~decorator = ~display.addFlowLayout(0@0, 0@0);
-~leds = ~pic.cols.collect{ |i|
-		Button(~display, Rect(0, 0, 1024/~pic.cols, 10))
-//			.extrude_( true )
-//			.border_( 3 )
-//			.moveWhenPressed_( 0 )
-//			.inverse_( true )
-			.states_([
-				["", Color.black, Color.grey],
-				["", Color.black, Color.green(0.7)]
-			])
-};
+"gui loaded"

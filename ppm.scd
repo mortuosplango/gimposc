@@ -1,4 +1,3 @@
-(
 ~writePPM = {|filename="test", array|
 	var content,file;
 	// P3 is the easiest format
@@ -13,5 +12,5 @@
 	file.write(content ++ "\n");
 	file.close;
 };
-)
-{~writePPM.value("test2",~pic)}.bench
+
+"ppm export function loaded"
