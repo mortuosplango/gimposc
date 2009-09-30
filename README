@@ -1,0 +1,16 @@
+To install, follow the instructions in INSTALL...
+
+The GIMP-Interface:
+
+If you're all set up, you should find the plug-ins in Filters/Sound.
+"SendOSC" is the gui version, which also stores preferences.
+"SendOSC (without GUI)" just calls SendOSC with the last 
+parameters.
+
+You can set keyboard shortcuts for them in GIMP in 
+"Edit/Keyboard Shortcuts" - this is probably the best way to use it.
+
+SuperCollider:
+
+Then just open gimposc.scd in SuperCollider and follow the instructions.
+If you get a message about a received array, you are probably set up...
