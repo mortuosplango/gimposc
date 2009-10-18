@@ -1,4 +1,4 @@
-~writePPM = {|filename="test", array|
+q.writePPM = {|dict, filename="test", array|
 	var content,file;
 	// P3 is the easiest format
 	content = ("P3\n" ++ array.cols ++ "\n"

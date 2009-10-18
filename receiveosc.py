@@ -14,6 +14,7 @@ import osc
 from gimpfu import *
 from gimpshelf import shelf
 
+from time import time, sleep
 
 # i18n
 #
@@ -22,16 +23,17 @@ locale_directory = gimp.locale_directory
 gettext.install( "gimp20-template" , locale_directory, unicode=True )
 
 receiveosc_help = _("Receive image as OSC-Message.")
-receiveosc_description = _("ReceiveOSC")+" "+sendosc_help
-
+receiveosc_description = _("ReceiveOSC")+" "+receiveosc_help
+global newPicWidth,newPicHeight,newPicBpp, newPicMode, pic
+    
 def storeSpecs(*msg):
-    global newPicWidth = msg[0][2]
-    global newPicHeight = msg[0][3]
-    global newPicBpp = msg[0][4]
+    newPicWidth = msg[0][2]
+    newPicHeight = msg[0][3]
+    newPicBpp = msg[0][4]
     if newPicBpp == 2:
-        global newPicMode = GRAY_IMAGE;
+        newPicMode = GRAY_IMAGE;
     else:
-        global newPicMode = RGB_IMAGE;
+        newPicMode = RGB_IMAGE;
 
 def receiveImage(*msg):
     msg = msg[0]
@@ -48,19 +50,21 @@ def displayImage(*msg):
         newPic.flush()  
 
 def python_fu_receiveosc( inImage, inDrawable, netAddr="127.0.0.1",
-                       port=57130):
+                       port=57122):
     # save options
     shelf['oscport'] = [port]
     shelf['oscnetaddr'] = [netAddr]
-    shelf['oscbflatten'] = [bFlatten]
 
     ## start communication: the specs of the picture to send
-    global pic = []
+    pic = []
     osc.init()
     osc.listen(netAddr, port)
     osc.bind(storeSpecs, "/gimp/spec")
     osc.bind(receiveImage, "/gimp/pic")
     osc.bind(displayImage, "/gimp/end")
+
+    time.sleep(5)
+
 
 
     ## end communication:
@@ -72,7 +76,7 @@ def python_fu_receiveosc( inImage, inDrawable, netAddr="127.0.0.1",
 
 
 register(
-    "python_fu_sendosc",
+    "python_fu_receiveosc",
     receiveosc_description,
     receiveosc_help,
     "Holger Ballweg",
@@ -85,10 +89,10 @@ register(
         (PF_DRAWABLE, "inLayer", "Input drawable", None),
         #(PF_BOOL, "bFlatten", "Flatten image?", False),
         (PF_STRING, "netAddr", _("IP-Address"), '127.0.0.1'),
-        (PF_INT, "port", _("Port to send to"), 57130),
+        (PF_INT, "port", _("Port to send to"), 57122),
         ],
     [],
-    python_fu_sendosc,
+    python_fu_receiveosc,
     menu="<Image>/Filters/Sound",
     domain=("gimp20-template", locale_directory) 
   )

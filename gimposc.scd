@@ -1,17 +1,18 @@
 ////// (1) set global settings
 (
-//~synthName = \transping;
+//q.synthName = \transping;
 
-~scale = nil;
-~octave = 0;
-~root = 0;
-~transp = 0;
-~sustain = 0.5;
-~amp = 0.05;
-~synthspec = ~sSequencer;
-~scale = Scale.choose(7, 12).tuning_(Tuning.choose(12).postln);
-~scaleamps = false;
-~tempoclock = TempoClock.new(queueSize:512);
+q.scale = nil;
+q.octave = 0;
+q.root = 0;
+q.transp = 0;
+q = ();
+q.sustain = 0.5;
+q.amp = 0.05;
+q.synthspec = q.sequencer;
+q.scale = Scale.choose(7, 12).tuning_(Tuning.choose(12).postln);
+q.scaleamps = false;
+q.synths = nil;
 )
 
 //////// (2) load everything
@@ -28,24 +29,26 @@ NetAddr.langPort;
 ///////////////// (4) start!
 
 
-~synthName = \pping;
+OpenObject
+
+q.synthName = \pping;
 (
 // stop all still running synths
-~synths.do({|item,i| (item.notNil).if(item.set(\gate, 0));});
-~synths = nil!(~pic.rows + 1);
+q.synths.do({|item,i| (item.notNil).if(item.set(\gate, 0));});
+q.synths = nil!(q.pic.rows + 1);
 )
-~synthspec = ~sMatrix
-~synthspec = ~sSequencer
-~synthspec = ~sGrains
+q.synthspec = q.sMatrix
+q.synthspec = q.sSequencer
+q.synthspec = q.sGrains
 
-~player.start;
-~player.stop;
-~player.reset;
+q.player.start;
+q.player.stop;
+q.player.reset;
 
-//~synthName = \transping;
-~synthName = \pgrain;
-//~synthName = \welshping;
-//~synthName = \pping;
-~sustain = 0.1;
+//q.synthName = \transping;
+q.synthName = \pgrain;
+//q.synthName = \welshping;
+//q.synthName = \pping;
+q.sustain = 0.1;
 
 

@@ -45,45 +45,50 @@ def python_fu_sendosc( inImage, inDrawable,
         bpp = pr.bpp
     else:
         pr = inDrawable.get_pixel_rgn(0,0,width,height,False)
-        if ((pr.bpp == 4) | (pr.bpp == 2)) :
-            bpp = pr.bpp - 1
-        else:
+        if ((pr.bpp == 4) | (pr.bpp == 1)) :
             bpp = pr.bpp
+        elif (pr.bpp == 2):
+            bpp = 1
+        elif (pr.bpp == 3):
+            bpp = 4
 
+    bpp = 4
     ## start communication and send the specs of the picture
     osc.init()
     osc.sendMsg("/gimp/spec",
-                [width, height, (bpp + 1)],
+                [width, height, bpp],
                 netAddr, port)
 
     prp = pr[0:width,0:height]
     pic = [ ]
-
+    prpindex = 0
     ## the message size is limited to 1024 integers
     ## therefore split the image in separate messages
-    for index in range(1,width*height*bpp):
+    for index in range(bpp * width * height):
         if index%1024 == 0:
             osc.sendMsg("/gimp", pic[-1024:], netAddr, port)
             if index%2048 == 0:
                 del pic[:1024]
         ## strip the alpha channel
-        if index%(bpp+1) == 0:
-            if bpp == 3:
+        if  (index%4 == 0) and (index > 0):
             ## if it is RGB, calc the brightness and save it:
             ##         0,299 * R + 0,587 * G + 0,114 * B
-                pic.append(
-                    round(
-                        (pic[-3] * 0.299)
-                        + (pic[-2] * 0.587)
-                        + (pic[-1] * 0.114)))
-            if bpp == pr.bpp:
+            pic.append(
+                round(
+                    (pic[-3] * 0.299)
+                    + (pic[-2] * 0.587)
+                    + (pic[-1] * 0.114)))
+            #if bpp == pr.bpp:
+            #    prpindex += 1
         ## convert the hex values into integers to not
         ## confuse the client with pseudo-unicodes
-                pic.append(ord(prp[index]))
+                #pic.append(ord(prp[prpindex]))
         else:
-            pic.append(ord(prp[index]))
-
+            pic.append(ord(prp[prpindex]))
+            prpindex = prpindex + 1
+            
     ## send the remainder
+    
     osc.sendMsg("/gimp", pic[-((width*height*bpp)%1024):], netAddr, port)
     ## end communication:
     osc.sendMsg("/gimp", [-1], netAddr, port)
