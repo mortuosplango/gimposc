@@ -14,7 +14,8 @@ import osc
 from gimpfu import *
 from gimpshelf import shelf
 
-from time import time, sleep
+#from time import time, sleep
+import time
 
 # i18n
 #
@@ -30,7 +31,7 @@ def storeSpecs(*msg):
     newPicWidth = msg[0][2]
     newPicHeight = msg[0][3]
     newPicBpp = msg[0][4]
-    if newPicBpp == 2:
+    if newPicBpp == 1:
         newPicMode = GRAY_IMAGE;
     else:
         newPicMode = RGB_IMAGE;
@@ -38,39 +39,40 @@ def storeSpecs(*msg):
 def receiveImage(*msg):
     msg = msg[0]
     msg[0][0:2] = []
+    print("receiving")
     for pixel in msg:
         pic.append(chr(pixel))
 
 def displayImage(*msg):
+    print("displaying")
     if msg[0][2] == -1:
         newLayer = gimp.Layer(inImage, "fromOSC", newPicWidth, newPicHeight, RGB_IMAGE, 100, NORMAL_MODE)
         newPic = newLayer.get_pixel_rgn(0,0,newPicWidth,newPicHeight, True)
         #newPic = pic
+        if newPicBpp == 4:
+            for index in range(len(newPic)):
+                if index%4 == 3:
+                    newPic[index] = 255
         newPic[0:newPicWidth,0:newPicHeight] = pic
         newPic.flush()  
 
 def python_fu_receiveosc( inImage, inDrawable, netAddr="127.0.0.1",
-                       port=57122):
+                       port=57130):
     # save options
-    shelf['oscport'] = [port]
-    shelf['oscnetaddr'] = [netAddr]
-
-    ## start communication: the specs of the picture to send
+    #shelf['oscport'] = [port]
+    #shelf['oscnetaddr'] = [netAddr]
     pic = []
     osc.init()
     osc.listen(netAddr, port)
     osc.bind(storeSpecs, "/gimp/spec")
     osc.bind(receiveImage, "/gimp/pic")
     osc.bind(displayImage, "/gimp/end")
-
+    ## start communication
+    osc.sendMsg("/gimp/ping", [-1], netAddr, 57120)
     time.sleep(5)
-
-
-
     ## end communication:
-    osc.sendMsg("/gimp", [-1], netAddr, port)
+    #osc.sendMsg("/gimp", [-1], netAddr, port)
     osc.dontListen()
-
 #    inImage.enable_undo()
     gimp.delete(newLayer)
 
@@ -89,7 +91,7 @@ register(
         (PF_DRAWABLE, "inLayer", "Input drawable", None),
         #(PF_BOOL, "bFlatten", "Flatten image?", False),
         (PF_STRING, "netAddr", _("IP-Address"), '127.0.0.1'),
-        (PF_INT, "port", _("Port to send to"), 57122),
+        (PF_INT, "port", _("Port to listen to"), 57130),
         ],
     [],
     python_fu_receiveosc,

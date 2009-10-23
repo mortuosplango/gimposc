@@ -5,7 +5,7 @@ q.grains =  {|dict, ipos, compamp, item|
 		Synth.grain(\pgrain, 
 			[
 				\sndbuf, b, 
-				\density, 	item[-1].linlin(0,255,0,10),
+				\density, 	item.last.linlin(0,255,0,10),
 				\position, ipos.linlin(0,(q.pic.rows-1),0,1),
 				//\rate, item[1].linlin(0,255,0.5,),
 				\rate, 0.5,
@@ -22,14 +22,15 @@ q.sequencer = {|dict, ipos, compamp, item|
 						Synth(\pping,
 							[
 								//\scale, ~scale,
-								\amp, item[-1].linlin(0,255,0,compamp),
+								\amp, item.last.linlin(0,255,0,compamp),
 								\gate, 1, 
-								\sustain, q.sustain,
+								//\sustain, q.sustain,
 								//\octave, ~octave,
 								//\root, ~root,
 								//\ctranspose, ~transp,
 								//shape:      item[1].linlin(0,255,0,1),
-								//pan:        item[2].linlin(0,255,-1,1)]);
+								\pan, (item[0].linlin(0,255,-1,0) 
+									+ item[1].linlin(0,255,0,1)),
 								\freq, ipos.midicps
 							]));
 				},
@@ -51,7 +52,7 @@ q.matrix = {|dict, ipos, compamp,item|
 				(
 					instrument:	\transping,
 					scale:		q.scale,
-					amp:		item[-1].linlin(0,255,0,compamp),
+					amp:		item.last.linlin(0,255,0,compamp),
 					//gate:       item[-1],
 					sustain:	q.sustain,
 					octave:		q.octave,

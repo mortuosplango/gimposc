@@ -62,33 +62,37 @@ def python_fu_sendosc( inImage, inDrawable,
     prp = pr[0:width,0:height]
     pic = [ ]
     prpindex = 0
+    #print("prpsize: ", len(prp), "range: ", (bpp * width * height), " bpp: " , bpp)
     ## the message size is limited to 1024 integers
     ## therefore split the image in separate messages
-    for index in range(bpp * width * height):
+    for index in range(bpp * width * height): 
         if index%1024 == 0:
             osc.sendMsg("/gimp", pic[-1024:], netAddr, port)
-            if index%2048 == 0:
+            #print("index: ", index, " prpindex: ", prpindex)
+            if len(pic) == 2048:
                 del pic[:1024]
-        ## strip the alpha channel
-        if  (index%4 == 0) and (index > 0):
+        if bpp == 4 and index%4 == 3:
             ## if it is RGB, calc the brightness and save it:
             ##         0,299 * R + 0,587 * G + 0,114 * B
             pic.append(
-                round(
-                    (pic[-3] * 0.299)
-                    + (pic[-2] * 0.587)
-                    + (pic[-1] * 0.114)))
-            #if bpp == pr.bpp:
-            #    prpindex += 1
-        ## convert the hex values into integers to not
-        ## confuse the client with pseudo-unicodes
-                #pic.append(ord(prp[prpindex]))
+                int(
+                    round(
+                        (pic[-3] * 0.299)
+                        + (pic[-2] * 0.587)
+                        + (pic[-1] * 0.114))))
+            ## strip alpha channel
+            if bpp == pr.bpp:
+                prpindex += 1
+        elif bpp == 1 and pr.bpp == 2:
+            prpindex += 1
         else:
+            ## convert the hex values into integers to not
+            ## confuse the client with pseudo-unicodes
             pic.append(ord(prp[prpindex]))
             prpindex = prpindex + 1
             
     ## send the remainder
-    
+    #print("end of loop")
     osc.sendMsg("/gimp", pic[-((width*height*bpp)%1024):], netAddr, port)
     ## end communication:
     osc.sendMsg("/gimp", [-1], netAddr, port)

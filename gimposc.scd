@@ -1,4 +1,5 @@
 ////// (1) set global settings
+q = ()
 (
 //q.synthName = \transping;
 
@@ -7,7 +8,7 @@ q.octave = 0;
 q.root = 0;
 q.transp = 0;
 q = ();
-q.sustain = 0.5;
+q.sustain = 0.3;
 q.amp = 0.05;
 q.synthspec = q.sequencer;
 q.scale = Scale.choose(7, 12).tuning_(Tuning.choose(12).postln);
