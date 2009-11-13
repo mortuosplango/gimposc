@@ -1,7 +1,7 @@
 ///////////////////// PLAYER (originally by rukano)
 /////////////////// Grain-Painting-like player
 q.grains =  {|dict, ipos, compamp, item| 
-	if(item[0] > 150){ 
+	if(item.last > 150){ 
 		Synth.grain(\pgrain, 
 			[
 				\sndbuf, b, 
@@ -15,7 +15,7 @@ q.grains =  {|dict, ipos, compamp, item|
 };
 /////////////////// Sequencer-like player
 q.sequencer = {|dict, ipos, compamp, item|
-			switch(q.synths[ipos].isNil.asArray ++ (item[0] != 0),
+			switch(q.synths[ipos].isNil.asArray ++ (item.last != 0),
 				[true, true], {
 					// ("create " ++ pos).postln;
 					q.synths.put(ipos, 
@@ -29,15 +29,17 @@ q.sequencer = {|dict, ipos, compamp, item|
 								//\root, ~root,
 								//\ctranspose, ~transp,
 								//shape:      item[1].linlin(0,255,0,1),
-								\pan, (item[0].linlin(0,255,-1,0) 
+								\pan, (item[0].linlin(0,255,0,-1) 
 									+ item[1].linlin(0,255,0,1)),
-								\freq, ipos.midicps
+								\freq, ((ipos / q.newpicheight) * 127).midicps
 							]));
 				},
 				[false,true],{
 					// ("mod " ++ pos).postln;
 					q.synths[ipos].set(
-					\amp, item[0].linlin(0,255,0,compamp));
+					\amp, item.last.linlin(0,255,0,compamp),
+					\pan, (item[0].linlin(0,255,0,-1) 
+									+ item[1].linlin(0,255,0,1)));
 				},				
 				[false,false],{
 					// ("kill " ++ pos).postln;
@@ -47,7 +49,7 @@ q.sequencer = {|dict, ipos, compamp, item|
 };
 ////////////// Matrixsequencer-like player
 q.matrix = {|dict, ipos, compamp,item|
-				if(item[0] != 0){ 
+				if(item.last != 0){ 
 				//item[0].postln;
 				(
 					instrument:	\transping,

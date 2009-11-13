@@ -40,10 +40,10 @@ SynthDef(\ggrain, { |gate=1, amp=1, dur=0.1, rate=1, pan=0, density=1, sndbuf='b
 		* env)
 }).send(s);
 */
-SynthDef(\pping, { |freq=440, sustain=0.1, gate=1, amp=0.1|
+SynthDef(\pping, { |freq=440, sustain=0.1, gate=1, amp=0.1, pan=0|
 	var signal = SinOsc.ar(freq).clip(-0.9,0.9) * 
 	EnvGen.ar(Env.adsr(0.1, 0.4, 0.8, 1, 1, -4), gate, doneAction:2);
-	Out.ar(0, signal.dup * amp.lag(sustain));
+	Out.ar(0, Pan2.ar(signal * amp.lag(sustain), pan.lag(sustain)));
 }).send(s);
 
 SynthDef(\welshping, { |freq=440, sustain=1, gate=0, amp=0.1|
