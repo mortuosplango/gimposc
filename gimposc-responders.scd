@@ -31,18 +31,29 @@ q.oscPic = OSCresponderNode(nil, '/gimp', { arg time, resp, msg;
 		)
 }).add;
 
+// x.performList("sendMsg".asSymbol, ["/gimp/rec",1,2])
 q.oscPing = OSCresponderNode(nil, '/gimp/ping', { arg time, resp, msg;
+	var net, tarray, msize, newMsg;
+	msize = 127;
 	if( msg[1] == -1, 
 		{   
-			var net, tarray;
+			"ping triggered".postln;
 			net = NetAddr.new("127.0.0.1", 57130);
 			tarray = q.pic.asArray.flat;
-			net.sendMsg("/gimp/spec", q.pic.cols, q.pic.rows, q.bpp - 1);
-			(tarray.size / 1024).trunc.do({ |index|
-				net.sendMsg("/gimp/pic", 
-					tarray.copyRange(index * 1024, (index * 1024) + 1023));
+			net.sendMsg("/gimp/spec", q.pic.cols, q.pic.rows, q.bpp);
+			(tarray.size / msize).floor.asInteger.do({ |index|
+				newMsg = tarray.copyRange(
+					index * msize, 
+					(index * msize) + (msize - 1));
+				//net.sendMsg("/gimp/pic",newMsg);
+				("sent slice " ++ index).postln;
+				net.performList('sendMsg', ["/gimp/pic"] ++ index ++ newMsg);
 			});
-			net.sendMsg("/gimp/pic", tarray.copyRange(tarray.size - (tarray.size % 1024), tarray.size));
+			net.performList('sendMsg',["/gimp/pic"] ++ 9999 ++
+			//			net.sendMsg("/gimp/pic", 
+				tarray.copyRange(
+					tarray.size - (tarray.size % msize), tarray.size));
+			net.sendMsg("/gimp/end", -1);
 			(time.asString 
 				++ ": Sent Array").postln; 
 		}

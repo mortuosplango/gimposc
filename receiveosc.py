@@ -10,6 +10,7 @@
 
 import math
 import osc
+import threading
 
 from gimpfu import *
 from gimpshelf import shelf
@@ -25,56 +26,100 @@ gettext.install( "gimp20-template" , locale_directory, unicode=True )
 
 receiveosc_help = _("Receive image as OSC-Message.")
 receiveosc_description = _("ReceiveOSC")+" "+receiveosc_help
-global newPicWidth,newPicHeight,newPicBpp, newPicMode, pic
-    
-def storeSpecs(*msg):
-    newPicWidth = msg[0][2]
-    newPicHeight = msg[0][3]
-    newPicBpp = msg[0][4]
-    if newPicBpp == 1:
-        newPicMode = GRAY_IMAGE;
+
+newSpecs = []
+receiving = 0
+pic = []
+
+def python_fu_receiveosc_storeSpecs(*msg):
+    global newSpecs,receiving
+    receiving = 2
+    newSpecs = msg[0][2:5]
+    if newSpecs[2] == 1:
+        newPicMode = GRAY_IMAGE
     else:
-        newPicMode = RGB_IMAGE;
+        newPicMode = RGB_IMAGE
+    print("got specs",newSpecs)
 
-def receiveImage(*msg):
-    msg = msg[0]
-    msg[0][0:2] = []
-    print("receiving")
-    for pixel in msg:
-        pic.append(chr(pixel))
+def python_fu_receiveosc_receiveImage(*msg):
+    global pic, receiving
+    print("receiving", msg[0][2])
+    pic.extend(msg[0][3:])
 
-def displayImage(*msg):
+def python_fu_receiveosc_displayImage(*msg):
+    global receiving
     print("displaying")
-    if msg[0][2] == -1:
-        newLayer = gimp.Layer(inImage, "fromOSC", newPicWidth, newPicHeight, RGB_IMAGE, 100, NORMAL_MODE)
-        newPic = newLayer.get_pixel_rgn(0,0,newPicWidth,newPicHeight, True)
-        #newPic = pic
-        if newPicBpp == 4:
-            for index in range(len(newPic)):
-                if index%4 == 3:
-                    newPic[index] = 255
-        newPic[0:newPicWidth,0:newPicHeight] = pic
-        newPic.flush()  
+    receiving = 3
 
 def python_fu_receiveosc( inImage, inDrawable, netAddr="127.0.0.1",
                        port=57130):
-    # save options
-    #shelf['oscport'] = [port]
-    #shelf['oscnetaddr'] = [netAddr]
-    pic = []
+    global receiving,newSpecs,pic
+    inImage.disable_undo()
+    gimp.progress_init("receiving...")
+    receiving = 1
+    startingTime = time.time()
+    # get right port for sc
+    if shelf.has_key('oscnetaddr'):
+        sendAddr = shelf['oscnetaddr'][0]
+    else:
+        sendAddr = "127.0.0.1"
+    if shelf.has_key('oscport'):
+        sendPort = shelf['oscport'][0]
+    else:
+        sendPort = 57120
+    ## init osc listeners
     osc.init()
     osc.listen(netAddr, port)
-    osc.bind(storeSpecs, "/gimp/spec")
-    osc.bind(receiveImage, "/gimp/pic")
-    osc.bind(displayImage, "/gimp/end")
-    ## start communication
-    osc.sendMsg("/gimp/ping", [-1], netAddr, 57120)
-    time.sleep(5)
-    ## end communication:
-    #osc.sendMsg("/gimp", [-1], netAddr, port)
+    osc.bind(python_fu_receiveosc_storeSpecs, "/gimp/spec")
+    osc.bind(python_fu_receiveosc_receiveImage, "/gimp/pic")
+    osc.bind(python_fu_receiveosc_displayImage, "/gimp/end")
+    ## ping sc to send image
+    osc.sendMsg("/gimp/ping", [-1], sendAddr, sendPort)
+    ## loop until done
+    while receiving:
+        #print("ping", receiving)
+        if receiving == 3:
+            gimp.progress_update(96)
+            newPic = []
+            newLayer = gimp.Layer(inImage,
+                                  "fromOSC",
+                                  newSpecs[0],
+                                  newSpecs[1],
+                                  RGB_IMAGE, 100, NORMAL_MODE)
+            inImage.add_layer(newLayer, 0)
+            pdb.gimp_edit_fill(newLayer, BACKGROUND_FILL)
+            newPic = newLayer.get_pixel_rgn(0,0,
+                                            newSpecs[0],newSpecs[1], True)
+            #newPic = pic
+            print(len(pic))
+            ## remove all brightness values
+            ## convert from int to chr-values
+            if newSpecs[2] == 4:
+                for index in range(len(pic)):
+                    if index%4 == 3:
+                        pic[index] = 255
+                    elif index == 0:
+                        picAsStr = chr(pic[index])
+                    else:
+                        picAsStr = picAsStr + chr(pic[index])
+            ## set the pixel region to pic
+            #print(len(picAsStr))
+            newPic[0:newSpecs[0],0:newSpecs[1]] = picAsStr
+            newLayer.flush()
+            newLayer.update(0,0,newSpecs[0],newSpecs[1])
+            print("flushed & updated")
+            receiving = 0
+        elif time.time() - startingTime > 5:
+            print("time's up")
+            receiving = 0
+        else:
+            gimp.progress_update(int(18 * (time.time() - startingTime)))
+            #time.sleep(0.2)
     osc.dontListen()
-#    inImage.enable_undo()
-    gimp.delete(newLayer)
+    inImage.enable_undo()
+    gimp.displays_flush()
+    gimp.extension_ack()
+    #gimp.delete(newLayer)
 
 
 register(

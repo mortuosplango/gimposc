@@ -15,7 +15,7 @@ q.scale = Scale.choose(7, 12).tuning_(Tuning.choose(12).postln);
 q.scaleamps = false;
 q.synths = nil;
 )
-
+Document.current.dump
 //////// (2) load everything
 (
 (Document.current.path.dirname ++ "/gimposc-responders.scd").load;
@@ -25,6 +25,8 @@ q.synths = nil;
 (Document.current.path.dirname ++ "/ppm.scd").load;
 NetAddr.langPort;
 )
+
+Quarks.gui
 
 /////////// (3) get some image and send it!
 ///////////////// (4) start!

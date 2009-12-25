@@ -62,10 +62,12 @@ def python_fu_sendosc( inImage, inDrawable,
     prp = pr[0:width,0:height]
     pic = [ ]
     prpindex = 0
+    gimp.progress_init("Sending image...")
     #print("prpsize: ", len(prp), "range: ", (bpp * width * height), " bpp: " , bpp)
     ## the message size is limited to 1024 integers
     ## therefore split the image in separate messages
-    for index in range(bpp * width * height): 
+    for index in range(bpp * width * height):
+        #gimp.progress_update(int((index / (bpp * width * height)) * 100))
         if index%1024 == 0:
             osc.sendMsg("/gimp", pic[-1024:], netAddr, port)
             #print("index: ", index, " prpindex: ", prpindex)
