@@ -18,21 +18,11 @@ q.oscPing =
 */
 
 GimpOSC {
-	var <respSpec, <respSender, <respReceiver, <pic, <delay;
+	var <respSpec, <respSender, <respReceiver, <pic, <>delay, <>specs, <>newPic;
 	*new {
 		^super.new.init;
 	}
 	init{
-		respSpec = OSCresponderNode(nil, '/gimp/spec', { arg time, resp, msg; 
-			this.pic = Image.new(
-				width: msg[1],
-				height: msg[2]);
-			/*
-			this.newpicbpp = msg[3];
-				this.newpic = [];*/
-			this.delay = time;
-			(time.asString ++ ": Receiving new Array...").postln;
-		}).add;
 		respSender = OSCresponderNode(nil, '/gimp/ping', 
 			{ arg time, resp, msg;
 				var net, tarray, msize, newMsg;
@@ -69,33 +59,39 @@ GimpOSC {
 					}
 				)
 		}).add;
+		respSpec = OSCresponderNode(nil, '/gimp/spec', 
+			{ arg time, resp, msg; 
+				// width, height, bpp
+				this.specs = [ msg[1], msg[2], msg[3]];
+				this.newPic = [];
+				this.delay = time;
+				(time.asString ++ ": Receiving new Array...").postln;
+			}).add;
 		respReceiver = OSCresponderNode(nil, '/gimp', 
 			{ arg time, resp, msg;
 				if( msg[1] == -1, 
 					{   
-						this.pic = Array2D.fromArray(
-							this.newpicheight,
-							this.newpicwidth, 
-							this.newpic.clump(this.newpicbpp));
-						this.bpp = this.newpicbpp;
+						this.pic = Bitmap.fromArray255(
+							this.specs[0],
+							this.specs[1], 
+							this.newPic.clump(specs[2]));
 						this.delay = time - this.delay;
 						(time.asString 
 							++ ": Updated Array in " 
 							++ this.delay ++ " seconds.").postln; 
 					},
 					{ 
-						//msg.postln;
-						//msg.size.postln;
 						msg.removeAt(0);
-						this.newpic = this.newpic ++ msg; 
+						this.newPic = this.newPic ++ msg; 
 					}
 				)
 			}).add;
 		"Responders ready"
 	}
+	/* seems to crash sc */
 	pic_ { arg img;
-		if(img.isKindOf(Image),
-			{ this.pic = img },
+		if(img.isKindOf(Bitmap),
+			{ pic = img },
 			{ "Error: Not an image" });
-	}
+		}
 }
