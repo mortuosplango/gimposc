@@ -11,6 +11,8 @@
 
 import math
 import osc
+import socket
+import time
 
 from gimpfu import *
 from gimpshelf import shelf
@@ -29,6 +31,7 @@ def python_fu_sendosc( inImage, inDrawable,
                        bFlatten=True,
                        netAddr="127.0.0.1",
                        port=57120):
+    global outSocket
     ## save options for use with the guiless version
     shelf['oscport'] = [port]
     shelf['oscnetaddr'] = [netAddr]
@@ -42,53 +45,42 @@ def python_fu_sendosc( inImage, inDrawable,
         flatImage = inImage.duplicate()
         flatImage.flatten()
         pr = flatImage.active_layer.get_pixel_rgn(0,0,width,height,False)
-        bpp = pr.bpp
     else:
         pr = inDrawable.get_pixel_rgn(0,0,width,height,False)
-        if  (pr.bpp == 1) :
-            bpp = pr.bpp
-        elif ((pr.bpp == 2) | (pr.bpp == 4)):
-            bpp = pr.bpp - 1
-    ##     elif (pr.bpp == 3):
-    ##         bpp = 4
 
-    ## bpp = 4
-    ## start communication and send the specs of the picture
+    ## start communication and send specs
     osc.init()
     osc.sendMsg("/gimp/spec",
-                [width, height, bpp],
+                [width, height, pr.bpp],
                 netAddr, port)
 
+    ## create an extra socket for the binary messages
+    outSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
     prp = pr[0:width,0:height]
-    pic = [ ]
-    #prpindex = 0
     gimp.progress_init("Sending image...")
-    #print("prpsize: ", len(prp), "range: ", (bpp * width * height), " bpp: " , bpp)
-    ## the message size is limited to 1024 integers
-    ## therefore split the image in separate messages
-    for index in range(pr.bpp * width * height):
-        #gimp.progress_update(int((index / (bpp * width * height)) * 100))
-        if len(pic) == 1024:
-            osc.sendMsg("/gimp", pic, netAddr, port)
-            #print("index: ", index, " prpindex: ", prpindex)
-            pic = [ ]
-        if pr.bpp == 4 and index%4 == 3:
-            ## strip alpha channel
-            pass
-        elif bpp == 1 and pr.bpp == 2 and index%2 == 1:
-            pass
+
+    ## empirical maximum size: 65487 (2 ** 16 - 49)
+    ## UDP-Datagram-Limit:
+    ## The practical limit for the data length which is imposed by the
+    ## underlying IPv4 protocol is 65,507 bytes.
+    ## http://en.wikipedia.org/wiki/User_Datagram_Protocol#Packet_structure
+    maxSize = 65487
+    imgSize = width * height * pr.bpp
+    for index in range( int(math.ceil(imgSize / float(maxSize))) ):
+        m = osc.OSCMessage()
+        m.address = "/gimp"
+        if (((index + 1) * maxSize) > imgSize):
+            m.append(prp[(index * maxSize):],'b')
         else:
-            ## convert the hex values into integers to not
-            ## confuse the client with pseudo-unicodes
-            pic.append(ord(prp[index]))
-            
-    ## send the remainder
-    #print("end of loop")
-    osc.sendMsg("/gimp", pic, netAddr, port)
-    ## end communication:
+            m.append(prp[(index * maxSize):((index + 1) * maxSize)],'b')
+        outSocket.sendto( m.getBinary(), (netAddr, port))
+        ## introduce latency to not loose packages
+        time.sleep(0.05)
+
+    ## end communication
     osc.sendMsg("/gimp", [-1], netAddr, port)
     ## clean up
-    del pic
     if bFlatten == True:
         inImage.enable_undo()
         gimp.delete(flatImage)

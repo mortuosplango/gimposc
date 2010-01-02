@@ -81,8 +81,7 @@ GimpOSC {
 							++ this.delay ++ " seconds.").postln; 
 					},
 					{ 
-						msg.removeAt(0);
-						this.newPic = this.newPic ++ msg; 
+						this.newPic = this.newPic ++ msg[1]; 
 					}
 				)
 			}).add;
