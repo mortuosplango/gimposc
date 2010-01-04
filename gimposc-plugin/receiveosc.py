@@ -29,7 +29,7 @@ receiveosc_description = _("ReceiveOSC")+" "+receiveosc_help
 
 newSpecs = []
 receiving = 0
-pic = []
+pic = ''
 
 def python_fu_receiveosc_storeSpecs(*msg):
     global newSpecs,receiving
@@ -43,8 +43,8 @@ def python_fu_receiveosc_storeSpecs(*msg):
 
 def python_fu_receiveosc_receiveImage(*msg):
     global pic, receiving
-    print("receiving", msg[0][2])
-    pic.extend(msg[0][3:])
+    print("receiving", msg, len(msg[0][3]))
+    pic = pic + msg[0][3]
 
 def python_fu_receiveosc_displayImage(*msg):
     global receiving
@@ -77,8 +77,9 @@ def python_fu_receiveosc( inImage, inDrawable, netAddr="127.0.0.1",
     osc.sendMsg("/gimp/ping", [-1], sendAddr, sendPort)
     ## loop until done
     while receiving:
-        #print("ping", receiving)
+        #print("ping", len(pic))
         if receiving == 3:
+            time.sleep(1)
             gimp.progress_update(96)
             newPic = []
             newLayer = gimp.Layer(inImage,
@@ -94,17 +95,17 @@ def python_fu_receiveosc( inImage, inDrawable, netAddr="127.0.0.1",
             print(len(pic))
             ## remove all brightness values
             ## convert from int to chr-values
-            if newSpecs[2] == 4:
-                for index in range(len(pic)):
-                    if index%4 == 3:
-                        pic[index] = 255
-                    elif index == 0:
-                        picAsStr = chr(pic[index])
-                    else:
-                        picAsStr = picAsStr + chr(pic[index])
+            ## if newSpecs[2] == 4:
+            ##     for index in range(len(pic)):
+            ##         if index%4 == 3:
+            ##             pic[index] = 255
+            ##         elif index == 0:
+            ##             picAsStr = chr(pic[index])
+            ##         else:
+            ##             picAsStr = picAsStr + chr(pic[index])
             ## set the pixel region to pic
-            #print(len(picAsStr))
-            newPic[0:newSpecs[0],0:newSpecs[1]] = picAsStr
+            #print(pic)
+            newPic[0:newSpecs[0],0:newSpecs[1]] = pic
             newLayer.flush()
             newLayer.update(0,0,newSpecs[0],newSpecs[1])
             print("flushed & updated")

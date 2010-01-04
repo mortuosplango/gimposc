@@ -18,40 +18,53 @@ q.oscPing =
 */
 
 GimpOSC {
-	var <respSpec, <respSender, <respReceiver, <pic, <>delay, <>specs, <>newPic;
+	var <respSpec, <respSender, <respReceiver, <pic, <>delay, <>specs, <>newPic, <>messageSize;
 	*new {
 		^super.new.init;
 	}
 	init{
+		messageSize = 1000;
 		respSender = OSCresponderNode(nil, '/gimp/ping', 
 			{ arg time, resp, msg;
-				var net, tarray, msize, newMsg;
+				var net, tarray, newMsg;
 				// number of pixels in every message
-				msize = 127;
 				if( msg[1] == -1, 
 					{   
 						"ping triggered".postln;
 						net = NetAddr.new("127.0.0.1", 57130);
-						// flatten the image
-						tarray = this.pic.asSimpleArray.flat;
+						// flatten the array & discard alpha
+						tarray = Int8Array.new;
+						tarray = tarray.addAll(
+							this.pic.asSimpleArray(true).flat);
 						net.sendMsg("/gimp/spec", 
-							this.pic.width, this.pic.height, this.pic.bpp);
+							this.pic.width, 
+							this.pic.height,
+							(this.pic.bpp - 1));// bpp without alpha
 						// send the image as chunks to gimp
-						(tarray.size / msize).floor.asInteger.do({ |index|
-							newMsg = tarray.copyRange(
-								index * msize, 
-								(index * msize) + (msize - 1));
-							//net.sendMsg("/gimp/pic",newMsg);
+						(tarray.size / this.messageSize).floor.asInteger.do(
+							{ |index|
+								newMsg = Int8Array.new;
+								// was passiert wenn index > 127?!
+								/*newMsg = newMsg.addAll("/gimp/pic".ascii 
+									++ [0,0] ++ ",ib".ascii 
+									++ (0!4) ++ index ++ (0!4))*/
+								newMsg = newMsg.addAll(tarray.copyRange(
+								index * this.messageSize, 
+								(index * this.messageSize) 
+									+ (this.messageSize - 1)));
+							net.sendMsg("/gimp/pic", index, newMsg);
 							("sent slice " ++ index).postln;
-							net.performList(
-								'sendMsg', 
-								["/gimp/pic"] ++ index ++ newMsg);
+							//net.performList(
+							//	'sendMsg', 
+							//	["/gimp/pic"] ++ index ++ newMsg);
 						});
-						net.performList(
-							'sendMsg',
-							["/gimp/pic"] ++ 9999 ++
-							tarray.copyRange(tarray.size 
-								- (tarray.size % msize), tarray.size));
+						newMsg = Int8Array.new;
+						newMsg = newMsg.addAll(
+							tarray.copyRange(
+								tarray.size - 
+								(tarray.size % this.messageSize), 
+								tarray.size));
+						net.sendMsg("/gimp/pic", 9999, newMsg);
 						// end communication
 						net.sendMsg("/gimp/end", -1);
 						(time.asString 
@@ -74,14 +87,15 @@ GimpOSC {
 						this.pic = Bitmap.fromArray255(
 							this.specs[0],
 							this.specs[1], 
-							this.newPic.clump(specs[2]));
+							(this.newPic%255).clump(specs[2]));
 						this.delay = time - this.delay;
 						(time.asString 
 							++ ": Updated Array in " 
 							++ this.delay ++ " seconds.").postln; 
 					},
 					{ 
-						this.newPic = this.newPic ++ msg[1]; 
+						("Received chunk " ++ msg[1]).postln;
+						this.newPic = this.newPic ++ msg[2]; 
 					}
 				)
 			}).add;

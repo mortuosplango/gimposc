@@ -58,6 +58,7 @@ def python_fu_sendosc( inImage, inDrawable,
     outSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     prp = pr[0:width,0:height]
+    ## print(osc.hexDump(prp))
     gimp.progress_init("Sending image...")
 
     ## empirical maximum size: 65487 (2 ** 16 - 49)
@@ -65,18 +66,19 @@ def python_fu_sendosc( inImage, inDrawable,
     ## The practical limit for the data length which is imposed by the
     ## underlying IPv4 protocol is 65,507 bytes.
     ## http://en.wikipedia.org/wiki/User_Datagram_Protocol#Packet_structure
-    maxSize = 65487
+    maxSize = 64000
     imgSize = width * height * pr.bpp
     for index in range( int(math.ceil(imgSize / float(maxSize))) ):
         m = osc.OSCMessage()
         m.address = "/gimp"
+        m.append(index)
         if (((index + 1) * maxSize) > imgSize):
             m.append(prp[(index * maxSize):],'b')
         else:
             m.append(prp[(index * maxSize):((index + 1) * maxSize)],'b')
         outSocket.sendto( m.getBinary(), (netAddr, port))
         ## introduce latency to not loose packages
-        time.sleep(0.05)
+        time.sleep(0.02)
 
     ## end communication
     osc.sendMsg("/gimp", [-1], netAddr, port)
