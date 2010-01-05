@@ -26,44 +26,42 @@ GimpOSC {
 		messageSize = 8000; // 1000 before
 		respSender = OSCresponderNode(nil, '/gimp/ping', 
 			{ arg time, resp, msg;
-				var net, tarray, newMsg, task;
+				var net, newMsg, task, nrSlices;
+				// message size in pixel
+				var msgPSize = (messageSize / 3).floor.asInteger;
 				// number of pixels in every message
 				if( msg[1] == -1, 
 					{   
 						// send the image as chunks to gimp
 						task = Task({
-							"in task".postln;
 							"ping triggered".postln;
 							net = NetAddr.new("127.0.0.1", 57130);
-							// flatten the array & discard alpha
-							tarray = Int8Array.new;
-							tarray = tarray.addAll(
-								this.pic.asSimpleArray(true).flat);
 							net.sendMsg("/gimp/spec", 
 								this.pic.width, 
 								this.pic.height,
 								(this.pic.bpp - 1));// bpp without alpha
 							"specs sent".postln;
 							// slice up the bitmap
-							(tarray.size / this.messageSize).floor.asInteger.do({ |index|
+							nrSlices = (this.pic.array.size / msgPSize).ceil.asInteger;
+							nrSlices.do({ |index|
+								var end;
 								newMsg = Int8Array.new;
-								newMsg = newMsg.addAll(tarray.copyRange(
-									index * this.messageSize, 
-									(index * this.messageSize) 
-									+ (this.messageSize - 1)));
+								if( (index + 1) < nrSlices,{ 
+									end = (index * msgPSize)+(msgPSize - 1);
+								},{
+									end = this.pic.array.size;
+								});		
+								newMsg = newMsg.addAll(
+									(this.pic.array.copyRange(
+										index * msgPSize, 
+										end).collect{|item| 
+											item.asArray255(true) }
+									).flat );
 								net.sendMsg("/gimp/pic", index, newMsg);
 								("sent slice " ++ index 
 									++ " with length "++newMsg.size).postln;
 								(0.04).wait;	
 							});
-							newMsg = Int8Array.new;
-							newMsg = newMsg.addAll(
-								tarray.copyRange(
-									tarray.size - 
-									(tarray.size % this.messageSize), 
-									tarray.size));
-							net.sendMsg("/gimp/pic", 9999, newMsg);
-							(0.04).wait;
 							// end communication
 							net.sendMsg("/gimp/end", -1);
 							(time.asString 
@@ -71,7 +69,7 @@ GimpOSC {
 						});
 						task.start;
 					});
-		}).add;
+			}).add;
 		respSpec = OSCresponderNode(nil, '/gimp/spec', 
 			{ arg time, resp, msg; 
 				// width, height, bpp
