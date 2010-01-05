@@ -7,10 +7,12 @@ If you're all set up, you should find the plug-ins in Filters/Sound.
 "SendOSC (without GUI)" just calls SendOSC with the last 
 parameters.
 
-You can set keyboard shortcuts for them in GIMP in 
+"ReceiveOSC" pings SuperCollider to send a bitmap back to GIMP.
+
+You can set keyboard shortcuts for these PlugIns in GIMP in 
 "Edit/Keyboard Shortcuts" - this is probably the best way to use it.
 
-SuperCollider:
+In SuperCollider:
 
-Then just open gimposc.scd in SuperCollider and follow the instructions.
-If you get a message about a received array, you are probably set up...
+If the classes loaded successfully, you can open gimposc.scd to see some
+examples.

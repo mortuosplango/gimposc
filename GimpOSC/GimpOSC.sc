@@ -1,20 +1,5 @@
-/*[q.oscPic, q.oscSpec, q.oscPing].do({|item| (item.notNil).if({item.remove})});
-
-q.oscSpec = OSCresponderNode(nil, '/gimp/spec', { arg time, resp, msg; 
-	q.newpicwidth = msg[1];
-    q.newpicheight = msg[2];
-	q.newpicbpp = msg[3];
-	q.newpic = [];
-	q.delay = time;
-	(time.asString ++ ": Receiving new Array...").postln;
-}).add;
-
-q.oscPic = 
-
-// x.performList("sendMsg".asSymbol, ["/gimp/rec",1,2])
-q.oscPing = 
-
-"responders loaded";
+/*
+here will be dragons
 */
 
 GimpOSC {
