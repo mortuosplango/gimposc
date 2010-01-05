@@ -1,8 +1,19 @@
 
 
-The Gimp-Plugin uses a modified version of SimpleOSC from
-      http://www.ixi-audio.net/content/body_backyard_python.html
 
-To install it, copy everything in the "gimp-plugin"-folder to GIMP's plug-in folder, e. g.
+To install the GIMP plugin, copy everything in the "gimp-plugin"-folder to GIMP's "plug-ins"-folder, e. g. in Linux:
       cp -R gimp-plugin/* ~/.gimp-2.6/plug-ins
+or on a Mac: 
+      cp -R gimp-plugin/* ~/Library/Application\ Support/Gimp/plug-ins/
 and make the .py-files executable if they aren't.
+Don't try to copy the gimp-plugin folder directly - it doesn't work.
+
+This folder includes a modified version of SimpleOSC from
+      http://www.ixi-audio.net/content/body_backyard_python.html
+(in gimp-plugin/osc).
+
+Put the GimpOSC-folder (containing the SuperCollider classes GimpOSC & Bitmap) in your SuperCollider/Extensions folder. In Linux e. g.
+      cp -R GimpOSC ~/share/SuperCollider/Extensions
+or an a Mac:
+      cp -R GimpOSC ~/Library/Application\ Support/SuperCollider/Extensions
+   

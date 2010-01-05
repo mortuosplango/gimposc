@@ -1,3 +1,6 @@
+/// this is currently broken
+
+
 (
 q.pic.do({ |rowValue,row|
 			rowValue.do({ |val,pos|

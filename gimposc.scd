@@ -20,6 +20,8 @@ x.pic
 // This is an instance of Bitmap, so you can f. e.
 /// create a task out of it:
 
+// you probably need to load the SynthDefs in gimposc-synths.scd
+(Document.current.path.dirname ++ "/gimposc-synths.scd").load;
 y = x.pic.asTask(type: \seq);
 y.start;
 y.stop;
@@ -28,7 +30,7 @@ y = x.pic.asTask;
 y.start;
 y.stop;
 
-/// store it as a PPM-image file
+/// store it as a PPM image file
 x.pic.asPPM
 
 /// get its dimensions
