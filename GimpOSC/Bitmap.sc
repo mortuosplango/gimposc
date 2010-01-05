@@ -154,4 +154,86 @@ Bitmap : Collection {
 			{ ^"File not found" })
 	}
 	*/
+	///////////////////// PLAYER (originally by rukano)
+	// this needs to be refactored or abandoned
+	asTask { arg instr = \ping, tempo = 180, threshold = 0.3, 
+		scaleAmplitude = true, mul = 0.1, postColumn = true, dur = this.width, type = \matrix;
+		^Task({
+			var compamp,sumamp,col, synths,ipos,pAmp,pFreq,pSustain;
+			synths = nil!(this.height + 1);
+			dur.do{ |counter|
+				col = counter % this.width;
+				//if(q.slider != nil, {q.slider.value_(col / q.pic.cols)});
+				// scale amplitudes
+				if(scaleAmplitude == true, {
+					sumamp = this.colAt(col).collect(
+						{ |item| item.brightness }).sum;
+					(sumamp > 0).if(compamp = mul /sumamp, compamp = mul);
+				}, { 
+					compamp = mul;
+				});
+				// main func
+				this.colAt(col).do{ |item, pos|
+					ipos = (pos - (this.height-1)).abs;
+					pAmp =  item.brightness.linlin(0,1,0,compamp);
+					pFreq = ((ipos / this.height) * 127).midicps;
+					pSustain = (60.0 / tempo);
+					if(type == \seq, {
+						switch(synths[ipos].isNil.asArray 
+							++ (item.brightness != 0),
+							[true, true], {
+								// ("create " ++ pos).postln;
+								synths.put(ipos, 
+									Synth(\pping,
+										[
+											\amp, pAmp,
+											\gate, 1, 
+											\pan, item.asMSPan,
+											\freq, pFreq
+										]));
+							},
+							[false,true],{
+								// ("mod " ++ pos).postln;
+								synths[ipos].set(
+									\amp, pAmp,
+									\pan, item.asMSPan
+								)
+							},				
+							[false,false],{
+								// ("kill " ++ pos).postln;
+								synths[ipos].set(\gate,0);
+								synths.put(ipos,nil);	
+							});
+					}, {
+						if(type == \grains, { 
+							/*if(item.brightness > threshold, { 
+								Synth.grain(\pgrain, 
+									[
+										\sndbuf, b, 
+										\density, item.brightness.linlin(0,1,0,10),
+										\position, ipos.linlin(0,(this.height-1),0,1),
+										//\rate, item[1].linlin(0,255,0.5,),
+										\rate, item.asMSPan,
+										\sustain, pSustain
+								])})*/
+						}, {
+							if(item.brightness > threshold, { 
+								item.postln;
+								(
+									instrument:	instr,
+									amp:	    pAmp,
+									sustain:	pSustain,
+									freq:		pFreq,
+									shape:      item.red
+									pan:        item.asMSPan
+								).play;
+							});
+						});
+					}); // if seq
+				}; // col.do
+				if(postColumn, { col.postln });
+				(60.0 / tempo).wait;
+			}; // dur.do
+		}, TempoClock.new(queueSize:512)); // Task
+	} // asTask
 }
