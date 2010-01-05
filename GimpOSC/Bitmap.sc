@@ -234,6 +234,8 @@ Bitmap : Collection {
 				if(postColumn, { col.postln });
 				(60.0 / tempo).wait;
 			}; // dur.do
+			// kill all synths
+			synths.do({|item,i| (item.notNil).if(item.set(\gate, 0));});
 		}, TempoClock.new(queueSize:512)); // Task
 	} // asTask
 }

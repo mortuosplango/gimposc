@@ -99,10 +99,6 @@ b.get(229,{|msg| (msg == a[229]).postln});
 
 s.scope
 
-t = JSCImage.openURL("http://hamburg.germanblogs.de/wp-content/uploads/2009/02/sarah-kuttner-wikipedia.jpg");
-
-t = JSCImage.open("/home/hb/test.jpg",SwingOSC.default)
-
 // interleave a multi-dimensional array
 (
 l = Signal.sineFill(16384, Array.fill(200, {0}).add(1));

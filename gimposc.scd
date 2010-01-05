@@ -1,57 +1,35 @@
-////// (1) set global settings
-q = ()
-(
-//q.synthName = \transping;
+// make an Instance of GimpOSC to create the OSC-Responders etc.
+x = GimpOSC.new
 
-q.scale = nil;
-q.octave = 0;
-q.root = 0;
-q.transp = 0;
-q = ();
-q.sustain = 0.3;
-q.amp = 0.05;
-q.synthspec = q.sequencer;
-q.scale = Scale.choose(7, 12).tuning_(Tuning.choose(12).postln);
-q.scaleamps = false;
-q.synths = nil;
-)
-Document.current.dump
-//////// (2) load everything
-(
-(Document.current.path.dirname ++ "/gimposc-responders.scd").load;
-(Document.current.path.dirname ++ "/gimposc-synths.scd").load;
-(Document.current.path.dirname ++ "/gimposc-players.scd").load;
-(Document.current.path.dirname ++ "/gimposc-gui.scd").load;
-(Document.current.path.dirname ++ "/ppm.scd").load;
+// you can set the size of the messages (in bytes) to Gimp via 
+x.messageSize
+x.messageSize = 1000
+x.messageSize = 8000
+
+
+// in Gimp: send an image to SC. ("SendOSC")
+// If you are on Linux: make sure it is the right port:
 NetAddr.langPort;
-)
 
-Quarks.gui
+// if everything worked (you get messages in the PostBuffer), 
+// the Bitmap is stored in:
+x.pic
 
-/////////// (3) get some image and send it!
-///////////////// (4) start!
+// If you make "ReceiveOSC" in Gimp, x.pic will be sent
 
+// This is an instance of Bitmap, so you can f. e.
+/// create a task out of it:
 
-OpenObject
+y = x.pic.asTask(type: \seq);
+y.start;
+y.stop;
 
-q.synthName = \pping;
-(
-// stop all still running synths
-q.synths.do({|item,i| (item.notNil).if(item.set(\gate, 0));});
-q.synths = nil!(q.pic.rows + 1);
-)
-q.synthspec = q.sMatrix
-q.synthspec = q.sSequencer
-q.synthspec = q.sGrains
+y = x.pic.asTask;
+y.start;
+y.stop;
 
-q.player.start;
-q.player.stop;
-q.player.reset;
+/// store it as a PPM-image file
+x.pic.asPPM
 
-//q.synthName = \transping;
-q.synthName = \pgrain;
-//q.synthName = \welshping;
-//q.synthName = \pping;
-q.sustain = 0.1;
-
-
+/// get its dimensions
+x.pic.width * x.pic.height * 4

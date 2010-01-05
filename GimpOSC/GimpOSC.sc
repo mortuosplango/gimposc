@@ -74,7 +74,7 @@ GimpOSC {
 			{ arg time, resp, msg; 
 				// width, height, bpp
 				this.specs = [ msg[1], msg[2], msg[3]];
-				this.newPic = [];
+				this.newPic = [ ];
 				this.delay = time;
 				(time.asString ++ ": Receiving new Array...").postln;
 			}).add;
@@ -90,6 +90,7 @@ GimpOSC {
 						(time.asString 
 							++ ": Updated Array in " 
 							++ this.delay ++ " seconds.").postln; 
+						this.newPic = [ ];
 					},
 					{ 
 						("Received chunk " ++ msg[1]).postln;
