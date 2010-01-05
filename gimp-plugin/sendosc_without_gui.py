@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+## sends a picture over osc (without gui)
+
 from gimpfu import *
 from gimpshelf import shelf
 

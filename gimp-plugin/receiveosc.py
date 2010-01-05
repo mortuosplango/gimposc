@@ -43,7 +43,7 @@ def python_fu_receiveosc_storeSpecs(*msg):
 
 def python_fu_receiveosc_receiveImage(*msg):
     global pic, receiving
-    print("receiving", msg, len(msg[0][3]))
+    print("receiving", msg[0][2], len(msg[0][3]))
     pic = pic + msg[0][3]
 
 def python_fu_receiveosc_displayImage(*msg):
@@ -110,7 +110,7 @@ def python_fu_receiveosc( inImage, inDrawable, netAddr="127.0.0.1",
             newLayer.update(0,0,newSpecs[0],newSpecs[1])
             print("flushed & updated")
             receiving = 0
-        elif time.time() - startingTime > 5:
+        elif time.time() - startingTime > 20:
             print("time's up")
             receiving = 0
         else:

@@ -66,7 +66,7 @@ def python_fu_sendosc( inImage, inDrawable,
     ## The practical limit for the data length which is imposed by the
     ## underlying IPv4 protocol is 65,507 bytes.
     ## http://en.wikipedia.org/wiki/User_Datagram_Protocol#Packet_structure
-    maxSize = 64000
+    maxSize = 8000
     imgSize = width * height * pr.bpp
     for index in range( int(math.ceil(imgSize / float(maxSize))) ):
         m = osc.OSCMessage()
