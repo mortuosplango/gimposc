@@ -4,5 +4,5 @@ The Gimp-Plugin uses a modified version of SimpleOSC from
       http://www.ixi-audio.net/content/body_backyard_python.html
 
 To install it, copy everything in the "gimp-plugin"-folder to GIMP's plug-in folder, e. g.
-      cp -R gimp-plugin/* ~/gimp-2.6/plug-ins
+      cp -R gimp-plugin/* ~/.gimp-2.6/plug-ins
 and make the .py-files executable if they aren't.
