@@ -39,8 +39,7 @@ GimpOSC {
 								newMsg = newMsg.addAll(
 									(this.pic.array.copyRange(
 										index * msgPSize, 
-										end).collect{|item| 
-											item.asArray255(true) }
+										end).collect(_.asArray255(true))
 									).flat );
 								net.sendMsg("/gimp/pic", index, newMsg);
 								("sent slice " ++ index 

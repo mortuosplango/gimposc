@@ -87,11 +87,11 @@ Bitmap : Collection {
 	*/
 	// TODO: besserer Name
 	asSimpleArray { arg stripAlpha = false;
-		^array.collect{|item| item.asArray255(stripAlpha) }
+		^array.collect( _.asArray255(stripAlpha))
 	}
 
 	asBrightnessMap { 
-		^array.collect({ |item|	item.brightness }).clump(width)
+		^array.collect(_.brightness).clump(width)
 	}
 	
 	asPattern { arg threshold = 0.6;
